@@ -155,7 +155,7 @@ class CustomHTMLElement extends HTMLElement {
       this.removeEventListener(...this.#events[keys[i]])
     }
     for(let i =0; i<this.#observers.length; i++){
-      //this.#observers[i].
+      this.#observers[i].disconnect();
     }
     console.log("Custom element removed from page.");
   }

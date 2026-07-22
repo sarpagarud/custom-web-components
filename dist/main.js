@@ -25,7 +25,7 @@ class CustomHTMLElement extends HTMLElement {
 
     if(fetchOptions) {
       (async () => {
-        await this.fetch('http://localhost');
+        await this.fetch('');
       })();
     }
   }

@@ -236,6 +236,13 @@ function colorToRGBA(c) {
 * From:https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Colors/Color_format_converter End
 */
 
+function hexToRgb(val, alpha) {
+  const r = parseInt(val.slice(1, 3), 16);
+  const g = parseInt(val.slice(3, 5), 16);
+  const b = parseInt(val.slice(5, 7), 16);
+  return {r, g, b, alpha}
+}
+
 function convertFromRGB(type, c) {
   switch(type) {
     case "hex": { return rgbaToHEXAText(c) };
@@ -548,13 +555,6 @@ The xyz identifier is a synonym for the xyz-d65 color space. The axes are not li
         padding: 8px 16px;
         box-shadow: rgba(69, 69, 69, 0.69) -1px 2px 10px -2px;
       }
-      .flex {
-        display: flex;
-        gap: 16px;
-      }
-      .flex-wrap {
-        flex-wrap: wrap;
-      }
     `);
 
     const colorValues = this.#colorValues;
@@ -800,4 +800,246 @@ The xyz identifier is a synonym for the xyz-d65 color space. The axes are not li
 
 }
 customElements.define("color-space", ColorSpaceGrid);
+
+class CustomColorPalette extends CustomHTMLElement {
+  #content = {};
+  constructor() {
+    super();
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+
+    this.appendStylesheet(`
+      
+    `);
+    
+    const div = document.createElement("div");
+    div.setAttribute("class", "");
+
+    const div2 = document.createElement("div");
+    div2.setAttribute("class", "");
+    div2.setAttribute("style", "margin: 12px;");
+    const div1 = document.createElement("div");
+    div1.setAttribute("class", "flex");
+    div1.setAttribute("style", "margin: 12px;");
+    const input1 = document.createElement("input");
+    input1.setAttribute("class", "");
+    input1.setAttribute("type", "color");
+    input1.setAttribute("style", "");
+    const input2 = document.createElement("input");
+    input2.setAttribute("class", "");
+    input2.setAttribute("type", "text");
+    input2.setAttribute("style", "");
+    const input3 = document.createElement("input");
+    input3.setAttribute("class", "");
+    input3.setAttribute("type", "range");
+    input3.setAttribute("value", "1");
+    input3.setAttribute("min", "0");
+    input3.setAttribute("max", "1");
+    input3.setAttribute("step", "0.01");
+    input3.setAttribute("style", "");
+    const button = document.createElement("button");
+    button.setAttribute("class", "button");
+    button.setAttribute("style", "");
+    button.textContent = `+`;
+
+    let width = 500;
+    let height = 300;
+    this.paletteBox = null;
+    this.paletteBox = document.createElement("div");
+    this.paletteBox.setAttribute("class", "palette-box flex flex-wrap");
+    this.paletteBox.setAttribute("style", `margin: 12px; height: ${height}px;`);
+
+    this.createPaletteBox = () => {
+      this.paletteBox.innerHTML = ``;
+      const keys = Object.keys(this.#content);
+      keys.forEach((c, i)=>{
+        const len = keys.length;
+        const w = document.createElement("div");
+        w.setAttribute("class", "");
+        w.setAttribute("style", `position: relative;background: ${this.#content[c].color}; width: ${width/(i+len)}px; height: ${height}px;padding: 16px;`);
+        
+        const w1 = document.createElement("div");
+        w1.setAttribute("class", "");
+        w1.setAttribute("style", `
+          background: #fff;
+          color: #111;
+          display: inline;
+          bottom: 24px;
+          position: absolute;
+          right: -16px;
+          transform: rotateZ(-90deg);
+          padding: 4px;
+          font-weight: 600;
+          font-size: 16px;
+        `);
+        w1.textContent = `${this.#content[c].color}`;
+
+        w.appendChild(w1);
+        this.paletteBox.appendChild(w);
+      })
+    };
+
+    div2.appendChild(this.paletteBox);
+
+    this.buttonClick = (e) => {
+      this.#content[input2.value] = {
+        color: input1.value,
+        name: input2.value,
+      }
+      this.createPaletteBox();
+      const wrapper = document.createElement("div");
+      wrapper.setAttribute("class", "");
+      wrapper.setAttribute("style", "margin: 12px;");
+
+      const heading = document.createElement("h2");
+      heading.setAttribute("class", "");
+      heading.setAttribute("style", "margin: 0px 0px 8px 0px;");
+      heading.innerText = `${input2.value}`;
+
+      const d = document.createElement("div");
+      d.setAttribute("class", "flex");
+      d.setAttribute("style", `width: 100%; height: 100px;gap:0;}`);
+
+      const clr = hexToRgb(input1.value, parseInt(input3.value));
+      const hsl = rgbaToHSLA(clr)
+      Array.from([
+        20, 25, 30, 35, 40, 45, 50, 55, 60, 65
+      ]).forEach((val)=>{
+        const c = document.createElement("div");
+        c.setAttribute("class", "");
+        c.setAttribute("style", `width: 100%; height: 100%;background: hsla(${hsl.h}deg ${hsl.s}% ${val}% / ${hsl.alpha})`);
+
+        d.appendChild(c);
+      })
+
+      wrapper.appendChild(heading);
+      wrapper.appendChild(d);
+      div2.appendChild(wrapper);
+    }
+
+    button.removeEventListener('click', this.buttonClick);
+    button.addEventListener('click', this.buttonClick);
+
+    div1.appendChild(input1);
+    div1.appendChild(input2);
+    div1.appendChild(input3);
+    div1.appendChild(button);
+
+
+    div.appendChild(div1)
+    div.appendChild(div2)
+
+    /*Object.keys(this.#content).forEach((key)=>{
+      const wrapper = document.createElement("div");
+      wrapper.setAttribute("class", "");
+      wrapper.setAttribute("style", "margin: 12px;");
+
+      const heading = document.createElement("h1");
+      heading.setAttribute("class", "");
+      heading.setAttribute("style", "margin: 0px 0px 8px 0px;");
+      heading.innerText = `Color Space`;
+
+      div.appendChild(heading);
+      div.appendChild(wrapper);
+
+    })*/
+
+    this.setChild(div);
+  }
+}
+customElements.define("cus-color-palette", CustomColorPalette);
+
+class CustomTabs extends CustomHTMLElement {
+  #tabs = [];
+  #content = {};
+  #current = '';
+  constructor() {
+    super();
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+
+    this.appendStylesheet(`
+      .tab-content {
+        display: none;
+        padding: 8px;
+        min-height: 50vh;
+      }
+      .tab-content.current {
+        display: block;
+        border: 1px solid #ccc;
+      }
+      .button {
+        background: #fff;
+        color: #111;
+        font-size: 14px;
+        border-radius: 0px;
+        padding: 8px 16px;
+        border: 1px solid #ccc;
+        border-bottom: 0px solid #ccc;
+      }
+    `);
+
+    this.#content = {
+      "color-space": document.createElement("color-space"),
+      "palette": document.createElement("cus-color-palette"),
+    }
+    this.#tabs = Object.keys(this.#content);
+    if(this.#tabs.length > 0) this.#current = this.#tabs[0];
+    
+    const parent = document.createElement("div");
+    parent.setAttribute("class", "");
+    parent.setAttribute("style", "padding: 16px;");
+
+    const tabsWrapper = document.createElement("div");
+    tabsWrapper.setAttribute("class", "flex");
+    tabsWrapper.setAttribute("style", "");
+
+    const contentWrapper = document.createElement("div");
+    contentWrapper.setAttribute("class", "");
+    contentWrapper.setAttribute("style", "");
+
+    {
+      this.#tabs.forEach((key, i)=>{
+        const w1 = document.createElement("div");
+        w1.setAttribute("class", "tabs");
+        w1.setAttribute("style", "");
+        const w2 = w1.cloneNode();
+        w2.setAttribute("class", this.#current ? "tab-content current": "tab-content");
+
+        const tab = document.createElement("button");
+        tab.setAttribute("class", "button");
+        tab.setAttribute("style", "");
+        tab.textContent = key.toUpperCase();
+
+        this.tabClick = (e) => {
+          this.#current = key;
+          console.log(this.#current )
+          this.#tabs.forEach((key, i)=>{
+            this.#content[key].parentNode.setAttribute("class", "tab-content");
+          });
+          w2.setAttribute("class", "tab-content current")
+        }
+
+        tab.removeEventListener('click', this.tabClick);
+        tab.addEventListener('click', this.tabClick);
+
+        w1.appendChild(tab);
+        tabsWrapper.appendChild(w1);
+
+        w2.appendChild(this.#content[key]);
+        contentWrapper.appendChild(w2);
+      })
+    }
+
+    parent.appendChild(tabsWrapper);
+    parent.appendChild(contentWrapper);
+
+    this.setChild(parent);
+  }
+}
+customElements.define("cus-tabs", CustomTabs);
 
